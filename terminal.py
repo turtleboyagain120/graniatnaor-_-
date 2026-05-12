@@ -1,46 +1,50 @@
-"""ZZX Custom Hybrid Terminal Logic."""
+import os
 import subprocess
 import ctypes
-import os
 from lupa import LuaRuntime
 
+# Embedded Lua Logic for loops and breaks
+LUA_LOGIC = """
+function process_zzx(input_code)
+    if string.find(input_code, "for 12 in number") then
+        for i = 1, 12 do
+            print("ZZX Loop Instance: " .. i)
+            if string.find(input_code, "!{BREAK}") then
+                print("__break-com!__ Forced stop.")
+                break
+            end
+        end
+    end
+    if string.find(input_code, "turtleboyagain120") then return "END" end
+    return "GO"
+end
+"""
+
 def is_admin():
-    """Checks for admin rights."""
-    try:
-        return ctypes.windll.shell32.IsUserAnAdmin()
-    except Exception: # pylint: disable=broad-exception-caught
-        return False
+    return ctypes.windll.shell32.IsUserAnAdmin()
 
-def sys_net_user(username, action):
-    """Real system user management."""
-    command = f"net user {username} /add" if action == "add" else f"net user {username}"
-    subprocess.run(command, shell=True, check=True)
-
-def sys_stop_service(service_name):
-    """Real system service control."""
-    subprocess.run(f"net stop {service_name}", shell=True, check=True)
-
-lua = LuaRuntime(unpack_returned_tuples=True)
-lua.globals().net_user = sys_net_user
-lua.globals().stop_service = sys_stop_service
-
-def run_zzx_hybrid(user_input): # Changed 'code' to 'user_input' to avoid confusion
-    """Scans and executes ZZX commands."""
-    if "UVAN" in user_input and not os.path.exists("C:/UVAN"):
-        print("CRITICAL: UVAN 7.0 not found.")
+def run_zzx_hybrid(user_input):
+    # Rule: Pre-scan for UVAN and Admin flags
+    if "UVAN" in user_input and not os.path.exists("C:/UVAN/uvan7.py"):
+        print("CRITICAL: UVAN 7.0 not found at C:/UVAN")
         return
 
-    try:
-        lua.execute(f"""
-            if string.find("{user_input}", "admin:yes") then
-                net_user("admin", "check")
-            end
-        """)
-    except Exception as err: # Changed 'e' to 'err'
-        print(f"ZZX Runtime Error: {err}")
+    lua = LuaRuntime(unpack_returned_tuples=True)
+    zzx_logic = lua.execute(LUA_LOGIC)
+    
+    status = lua.globals().process_zzx(user_input)
+    
+    if "net user" in user_input or "admin:yes" in user_input:
+        if is_admin():
+            subprocess.run(user_input.split('=')[-1].strip() if '=' in user_input else "net user", shell=True)
+        else:
+            print("ZZX Error: Admin privileges required.")
+
+    if status == "END":
+        print("Source: turtleboyagain120 | System Offline.")
+        exit()
 
 if __name__ == "__main__":
-    print("ZZX Terminal [READY]")
+    print("ZZX Hybrid Terminal [READY]")
     while True:
-        cmd = input("ZZX >> ")
-        run_zzx_hybrid(cmd)
+        run_zzx_hybrid(input("ZZX >> "))
