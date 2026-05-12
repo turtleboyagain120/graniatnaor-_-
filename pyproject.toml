@@ -4,17 +4,9 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "zzx-terminal"
-version = "2.0.0"
-description = "Pure Real ZZX Python-Lua Hybrid Terminal"
-readme = "README.md"
-requires-python = ">=3.8"
-dependencies = [
-    "lupa>=1.14.1",
-]
+version = "7.0.0"
+description = "Pure Real ZZX Terminal"
+dependencies = ["lupa>=1.14.1"]
 
-[project.scripts]
-zzx-term = "main:run_zzx_hybrid"
-
-[tool.pyinstaller]
-onefile = true
-noconsole = false
+[tool.setuptools]
+py-modules = ["terminal", "uvan7"]
